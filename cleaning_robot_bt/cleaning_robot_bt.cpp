@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include "behaviortree_cpp_v3/action_node.h"
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -52,7 +51,7 @@ BT::NodeStatus isDirtFound()
 class FindDirt : public BT::SyncActionNode
 {
 public:
-    explicit FindDirt(const std::string &name, const BT::NodeConfiguration &config) : BT::SyncActionNode{name, config}
+    explicit FindDirt(const std::string &name, const BT::NodeConfig &config) : BT::SyncActionNode{name, config}
     {
     }
 
@@ -85,7 +84,7 @@ public:
  */
 BT::NodeStatus isDirtClose(BT::TreeNode &tree)
 {
-    BT::Optional<std::vector<double>> msg = tree.getInput<std::vector<double>>("dirt_position");
+    auto msg = tree.getInput<std::vector<double>>("dirt_position");
 
     if (!msg)
         throw BT::RuntimeError("Missing required input[message] : ", msg.error());
@@ -102,7 +101,7 @@ BT::NodeStatus isDirtClose(BT::TreeNode &tree)
 class MoveToDirt : public BT::SyncActionNode
 {
 public:
-    explicit MoveToDirt(const std::string &name, const BT::NodeConfiguration &config) : BT::SyncActionNode{name, config}
+    explicit MoveToDirt(const std::string &name, const BT::NodeConfig &config) : BT::SyncActionNode{name, config}
     {
     }
 
@@ -119,7 +118,7 @@ public:
      */
     BT::NodeStatus tick() override
     {
-        BT::Optional<std::vector<double>> msg = getInput<std::vector<double>>("dirt_position");
+        auto msg = getInput<std::vector<double>>("dirt_position");
         if (!msg)
             throw BT::RuntimeError("missing input[message] : ", msg.error());
 
@@ -223,7 +222,7 @@ public:
     {
         std::cout << "Placing trash in bin" << std::endl;
         std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::FAILURE;
+        return BT::NodeStatus::SUCCESS;
     }
 };
 
@@ -272,9 +271,9 @@ int main()
 
     factory.registerNodeType<AskForHelp>("AskForHelp");
 
-    auto tree = factory.createTreeFromFile("../bt.xml");
+    auto tree = factory.createTreeFromFile("../cleaning_robot_bt.xml");
 
-    tree.tickRoot();
+    tree.tickWhileRunning();
 
     return 0;
 }
