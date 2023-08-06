@@ -1,4 +1,4 @@
 *.out
 throw_dirt_into_bin
 *.log
-/bt/build
+/cleaning_robot_bt/build
