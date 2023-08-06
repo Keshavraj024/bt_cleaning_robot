@@ -1,0 +1,33 @@
+<root min_tree_to_execute = "MainTree">
+    <BehaviorTree ID="MainTree">
+        <Fallback name="root_fallback">
+            <Sequence name="throw_trash_sequence">
+                <Fallback name="find_room_fallback">
+                    <IsRoomFound name="found_room"/>
+                    <FindRoom name="find_room_to_clean"/>
+                </Fallback>
+                <Fallback name="find_dirt_fallback">
+                    <IsDirtFound name="found_dirt"/>
+                    <FindDirt name="find_dirt_to_pick" dirt_position="{position}"/>
+                </Fallback>
+                <Fallback name="distance_to_dirt_fallback">
+                    <IsTheDirtClose name="is_the_dirt_close" dirt_position="{position}"/>
+                    <MoveToDirt name="move_to_dirt_to_pick" dirt_position="{position}"/>
+                </Fallback>
+                <Fallback name="grasp_dirt_fallback">
+                    <IsDirtGrasped name="is_the_dist_grasp"/>
+                    <GraspDirt name="grasp_the_dirt"/>
+                </Fallback>
+                <Fallback name="find_bin_fallback">
+                    <IsBinClose name="is_the_bin_close"/>
+                    <MoveToBin name="move_to_bin"/>
+                </Fallback>
+                <Fallback name="place_dirt_fallback">
+                    <IsDirtPlaced name="is_the_dirt_placed"/>
+                    <PlaceDirt name="place_the_dirt"/>
+                </Fallback>
+            </Sequence>
+            <AskForHelp name="ask_for_human_intervention"/>
+        </Fallback>
+    </BehaviorTree>
+</root>
