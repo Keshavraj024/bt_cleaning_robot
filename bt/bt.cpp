@@ -6,7 +6,11 @@
 
 using namespace std::chrono_literals;
 
-/* Find room subtree */
+/**
+ * Check if the room is found.
+ *
+ * @return BT::NodeStatus::FAILURE if the room is not found, indicating the action failed.
+ */
 BT::NodeStatus isRoomFound()
 {
     std::cout << "Room not found " << std::endl;
@@ -20,6 +24,11 @@ public:
     {
     }
 
+    /**
+     * Find the room to clean.
+     *
+     * @return BT::NodeStatus::SUCCESS once the room is found, indicating the action succeeded.
+     */
     BT::NodeStatus tick() override
     {
         std::cout << "Finding room to clean " << std::endl;
@@ -28,7 +37,12 @@ public:
     }
 };
 
-/* Find dirt subtree*/
+/**
+ * Check if dirt is found.
+ *
+ * @return BT::NodeStatus::FAILURE if dirt is not found, indicating the action failed.
+ */
+
 BT::NodeStatus isDirtFound()
 {
     std::cout << "Dirt not found " << std::endl;
@@ -44,9 +58,14 @@ public:
 
     static BT::PortsList providedPorts()
     {
-        return { BT::OutputPort <std::vector<double>>("dirt_position") };
+        return {BT::OutputPort<std::vector<double>>("dirt_position")};
     }
 
+    /**
+     * Find the dirt to clean.
+     *
+     * @return BT::NodeStatus::SUCCESS once the dirt is found, indicating the action succeeded.
+     */
     BT::NodeStatus tick() override
     {
         std::cout << "Finding dirt to clean " << std::endl;
@@ -57,8 +76,14 @@ public:
     }
 };
 
-/*Move to dirt subtree*/
-BT::NodeStatus isTheDirtClose(BT::TreeNode &tree)
+/**
+ * Check if the dirt is close to the robot.
+ *
+ * @param tree The behavior tree node.
+ * @return BT::NodeStatus::SUCCESS if the dirt is close to the robot, indicating the action succeeded.
+ * @throws BT::RuntimeError if the required input "dirt_position" is missing.
+ */
+BT::NodeStatus isDirtClose(BT::TreeNode &tree)
 {
     BT::Optional<std::vector<double>> msg = tree.getInput<std::vector<double>>("dirt_position");
 
@@ -86,6 +111,12 @@ public:
         return {BT::InputPort<std::vector<double>>("dirt_position")};
     }
 
+    /**
+     * Move to the dirt to clean.
+     *
+     * @return BT::NodeStatus::SUCCESS once the robot has moved to the dirt, indicating the action succeeded.
+     * @throws BT::RuntimeError if the required input "dirt_position" is missing.
+     */
     BT::NodeStatus tick() override
     {
         BT::Optional<std::vector<double>> msg = getInput<std::vector<double>>("dirt_position");
@@ -101,7 +132,11 @@ public:
     }
 };
 
-/*Grasp the dirt subtree*/
+/**
+ * Check if the dirt is grasped by the robot.
+ *
+ * @return BT::NodeStatus::FAILURE if the dirt is not grasped, indicating the action failed.
+ */
 BT::NodeStatus isDirtGrasped()
 {
     std::cout << "Dirt is not grasped " << std::endl;
@@ -115,6 +150,11 @@ public:
     {
     }
 
+    /**
+     * Grasp the dirt.
+     *
+     * @return BT::NodeStatus::SUCCESS once the dirt is grasped, indicating the action succeeded.
+     */
     BT::NodeStatus tick() override
     {
         std::cout << "Grasping dirt " << std::endl;
@@ -123,7 +163,11 @@ public:
     }
 };
 
-/*Move to bin*/
+/**
+ * Check if the bin is close to the robot.
+ *
+ * @return BT::NodeStatus::FAILURE if the bin is not close, indicating the action failed.
+ */
 BT::NodeStatus isBinClose()
 {
     std::cout << "Bin is not close to the robot " << std::endl;
@@ -137,6 +181,12 @@ public:
     {
     }
 
+    /**
+     * Move to the bin.
+     *
+     * @return BT::NodeStatus::SUCCESS once the robot has moved to the bin, indicating the action succeeded.
+     */
+
     BT::NodeStatus tick() override
     {
         std::cout << "Moving to bin" << std::endl;
@@ -145,7 +195,11 @@ public:
     }
 };
 
-/*Place the trash subtree*/
+/**
+ * Check if the dirt is placed in the trash.
+ *
+ * @return BT::NodeStatus::FAILURE if the dirt is not placed, indicating the action failed.
+ */
 BT::NodeStatus isDirtPlaced()
 {
     std::cout << "Dirt is not placed in the trash " << std::endl;
@@ -159,6 +213,12 @@ public:
     {
     }
 
+    /**
+     * Place the dirt in the trash.
+     *
+     * @return BT::NodeStatus::FAILURE once the dirt is placed in the trash, indicating the action failed.
+     */
+
     BT::NodeStatus tick() override
     {
         std::cout << "Placing trash in bin" << std::endl;
@@ -167,7 +227,6 @@ public:
     }
 };
 
-/*ask help*/
 class AskForHelp : public BT::SyncActionNode
 {
 public:
@@ -175,6 +234,11 @@ public:
     {
     }
 
+    /**
+     * Ask for human intervention and wait for 10 seconds.
+     *
+     * @return BT::NodeStatus::SUCCESS once the robot has asked for help, indicating the action succeeded.
+     */
     BT::NodeStatus tick() override
     {
         std::cout << "Asking for human intervention. Waiting here for 10sec" << std::endl;
@@ -194,7 +258,7 @@ int main()
     factory.registerNodeType<FindDirt>("FindDirt");
 
     BT::PortsList dirtPosition = {BT::InputPort<std::vector<double>>("dirt_position")};
-    factory.registerSimpleCondition("IsTheDirtClose", isTheDirtClose, dirtPosition);
+    factory.registerSimpleCondition("IsDirtClose", isDirtClose, dirtPosition);
     factory.registerNodeType<MoveToDirt>("MoveToDirt");
 
     factory.registerSimpleCondition("IsDirtGrasped", std::bind(isDirtGrasped));
