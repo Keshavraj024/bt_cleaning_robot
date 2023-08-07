@@ -11,8 +11,8 @@
                     <FindDirt name="find_dirt_to_pick" dirt_position="{position}"/>
                 </Fallback>
                 <Fallback name="distance_to_dirt_fallback">
-                    <IsDirtClose name="is_the_dirt_close" dirt_position="{position}"/>
-                    <MoveToDirt name="move_to_dirt_to_pick" dirt_position="{position}"/>
+                    <IsDirtClose name="is_the_dirt_close" dirt_position="{position}" robot_position="{robot_position}"/>
+                    <MoveToDirt name="move_to_dirt_to_pick" dirt_position="{position}" robot_position="{robot_position}"/>
                 </Fallback>
                 <Fallback name="grasp_dirt_fallback">
                     <IsDirtGrasped name="is_the_dist_grasp"/>
