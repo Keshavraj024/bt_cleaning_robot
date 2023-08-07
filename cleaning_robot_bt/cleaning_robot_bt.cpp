@@ -6,6 +6,16 @@
 
 using namespace std::chrono_literals;
 
+/**
+ * Calculates the Euclidean distance between the given dirt pose and robot pose.
+ *
+ * This function takes two positions represented as Expected<std::vector<double>>
+ * and calculates the Euclidean distance between them in a 2D space.
+ *
+ * @param dirtPose The Expected<std::vector<double>> containing the x and y coordinates of the dirt pose.
+ * @param roboPose The Expected<std::vector<double>> containing the x and y coordinates of the robot pose.
+ * @return The Euclidean distance between the dirt pose and robot pose.
+ */
 double calculateDistance(const BT::Expected<std::vector<double>> &dirtPose, const BT::Expected<std::vector<double>> &roboPose)
 {
     auto distance = std::sqrt(((dirtPose.value().at(0) - roboPose.value().at(0)) * (dirtPose.value().at(0) - roboPose.value().at(0))) +
