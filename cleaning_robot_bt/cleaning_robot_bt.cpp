@@ -2,8 +2,16 @@
 #include <chrono>
 #include "behaviortree_cpp/bt_factory.h"
 #include <vector>
+#include <cmath>
 
 using namespace std::chrono_literals;
+
+double calculateDistance(const BT::Expected<std::vector<double>> &dirtPose, const BT::Expected<std::vector<double>> &roboPose)
+{
+    auto distance = std::sqrt(((dirtPose.value().at(0) - roboPose.value().at(0)) * (dirtPose.value().at(0) - roboPose.value().at(0))) +
+                              ((dirtPose.value().at(1) - roboPose.value().at(1)) * (dirtPose.value().at(1) - roboPose.value().at(1))));
+    return distance;
+}
 
 /**
  * Check if the room is found.
@@ -68,7 +76,7 @@ public:
     BT::NodeStatus tick() override
     {
         std::cout << "Finding dirt to clean " << std::endl;
-        std::vector<double> dirtPosition{1.0, 2.0, 3.0};
+        std::vector<double> dirtPosition{1.0, 2.0, 0.0};
         BT::TreeNode::setOutput("dirt_position", dirtPosition);
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
@@ -84,12 +92,18 @@ public:
  */
 BT::NodeStatus isDirtClose(BT::TreeNode &tree)
 {
-    auto msg = tree.getInput<std::vector<double>>("dirt_position");
+    auto dirtPose = tree.getInput<std::vector<double>>("dirt_position");
+    std::vector<double> roboPose{0.3, 2.0, 0.0};
+    BT::Expected<std::vector<double>> robotPose(roboPose);
 
-    if (!msg)
-        throw BT::RuntimeError("Missing required input[message] : ", msg.error());
+    auto distance{calculateDistance(dirtPose, robotPose)};
 
-    if (msg.value().at(0) > 0.5)
+    if (!dirtPose)
+        throw BT::RuntimeError("Missing required input[message] : ", dirtPose.error());
+
+    tree.setOutput("robot_position", roboPose);
+
+    if (distance > 0.1)
     {
         std::cout << "Dirt is not close to the robot " << std::endl;
         return BT::NodeStatus::FAILURE;
@@ -107,7 +121,7 @@ public:
 
     static BT::PortsList providedPorts()
     {
-        return {BT::InputPort<std::vector<double>>("dirt_position")};
+        return {BT::InputPort<std::vector<double>>("dirt_position"), BT::InputPort<std::vector<double>>("robot_position")};
     }
 
     /**
@@ -118,14 +132,18 @@ public:
      */
     BT::NodeStatus tick() override
     {
-        auto msg = getInput<std::vector<double>>("dirt_position");
-        if (!msg)
-            throw BT::RuntimeError("missing input[message] : ", msg.error());
+        auto dirtPose = getInput<std::vector<double>>("dirt_position");
+        auto roboPose = getInput<std::vector<double>>("robot_position");
 
-        while (msg.value().at(0) > 0.5)
+        if (!dirtPose || !roboPose)
+            throw BT::RuntimeError("missing input[message] : " + (std::string)dirtPose.error());
+
+        auto distance{calculateDistance(dirtPose, roboPose)};
+        while (distance > 0.1)
         {
-            msg.value().at(0) -= 0.1;
-            std::cout << "Moving to dirt to clean " << msg.value().at(0) << std::endl;
+            roboPose.value().at(0) += 0.1;
+            std::cout << "Distance to dirt " << distance << std::endl;
+            distance = calculateDistance(dirtPose, roboPose);
         }
         return BT::NodeStatus::SUCCESS;
     }
@@ -256,8 +274,8 @@ int main()
     factory.registerSimpleCondition("IsDirtFound", std::bind(isDirtFound));
     factory.registerNodeType<FindDirt>("FindDirt");
 
-    BT::PortsList dirtPosition = {BT::InputPort<std::vector<double>>("dirt_position")};
-    factory.registerSimpleCondition("IsDirtClose", isDirtClose, dirtPosition);
+    BT::PortsList portsList = {BT::InputPort<std::vector<double>>("dirt_position"), BT::OutputPort<std::vector<double>>("robot_position")};
+    factory.registerSimpleCondition("IsDirtClose", isDirtClose, portsList);
     factory.registerNodeType<MoveToDirt>("MoveToDirt");
 
     factory.registerSimpleCondition("IsDirtGrasped", std::bind(isDirtGrasped));
